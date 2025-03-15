@@ -73,12 +73,15 @@ const VOTE_UNDECIDED = "undecided"
 
 const VOTE_COUNT_TOTAL = Object.values(STATES).reduce((sum, state) => sum+state.votes, 0)
 const VOTE_COUNT_SUCCESS = Math.ceil(VOTE_COUNT_TOTAL / 2)
+const VOTE_COUNT_SUCCESS_TWO_THIRDS = Math.ceil(VOTE_COUNT_TOTAL / 3 * 2)
 
 const widthPerVoteCount = voteCount => (voteCount / VOTE_COUNT_TOTAL * 100) + "%"
 
 const voteDescription = voteCount => voteCount + " " + "|".repeat(voteCount)
 
-const isVoteSuccess = () => votes.value[VOTE_YES] > VOTE_COUNT_TOTAL / 2
+const isAbsoluteMajority = () => votes.value[VOTE_YES] > VOTE_COUNT_TOTAL / 2
+
+const isTwoThirdsMajority = () => votes.value[VOTE_YES] > VOTE_COUNT_TOTAL / 3 * 2
 
 const VOTE_SLUG_KEY = "v"
 const getVoteSlug = () => states.map(s => VOTE_TO_SLUG[s.votesFor]).join("")
@@ -202,6 +205,7 @@ watch(states, states => {
 
     <div class="mt-4 w-100">
       <div class="text-center mb-2">Für eine Mehrheit notwendig sind {{ VOTE_COUNT_SUCCESS }} Stimmen.</div>
+      <div class="text-center mb-2">Für eine Änderung des Grundgesetzes notwendig sind {{ VOTE_COUNT_SUCCESS_TWO_THIRDS }} Stimmen.</div>
       <div class="d-flex justify-content-center align-items-center">
         <span class="square-box bcolor-yes ms-2 me-2"></span>
         <span>Ja: {{ votes[VOTE_YES] }}</span>
@@ -219,13 +223,17 @@ watch(states, states => {
           <div class="bar bcolor-no" :style="{width: widthPerVoteCount(votes[VOTE_NO])}"></div>
           <div class="bar bcolor-undecided" :style="{width: widthPerVoteCount(votes[VOTE_UNDECIDED])}"></div>
           <div class="majority-marker"></div>
+          <div class="majority-marker two-thirds"></div>
         </div>
       </div>
       <div class="text-center">
         Der Antrag ist
-        <span :class="isVoteSuccess() ? 'color-yes' : 'color-no'">
-          {{ isVoteSuccess() ? "angenommen" : "nicht angenommen" }}
-        </span>.
+        <span :class="isAbsoluteMajority() ? 'color-yes' : 'color-no'">
+          {{ isAbsoluteMajority() ? "angenommen" : "nicht angenommen" }}
+        </span>
+        <span :class="isTwoThirdsMajority() ? 'color-yes' : 'color-no'">
+          {{ isTwoThirdsMajority() ? " mit Zweidrittelmehrheit." : " ohne Zweidrittelmehrheit." }}
+        </span>
       </div>
       <div class="d-flex justify-content-center align-items-center mt-4">
         <div class="input-group w-sm">
@@ -282,6 +290,9 @@ label {
   height: 100%;
   width: 3px;
   background-color: var(--bs-dark);
+}
+.vote-diagram .majority-marker.two-thirds {
+  left: calc(100% / 3 * 2);
 }
 
 .square-box {
